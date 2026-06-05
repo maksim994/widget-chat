@@ -9,6 +9,12 @@ export default defineConfig({
       formats: ["iife"],
       fileName: () => "widget.js",
     },
+    rollupOptions: {
+      output: {
+        extend: true,
+        exports: "named",
+      },
+    },
     outDir: "dist",
     emptyOutDir: true,
   },

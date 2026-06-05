@@ -112,13 +112,17 @@ sitesRouter.get("/:id/embed", async (req, res) => {
   res.json({
     publicKey: site.publicKey,
     snippet: `<script>
-  (function(w,d,s,k,u){
+  (function(w,d,s,u){
     w.WidgetChat=w.WidgetChat||{q:[]};
     w.WidgetChat.init=function(o){w.WidgetChat.q.push(['init',o]);};
     var e=d.createElement(s);e.async=1;e.src=u+'/widget.js';
-    e.onload=function(){WidgetChat.init({siteKey:'${site.publicKey}',apiUrl:'${apiUrl}'});};
+    e.onload=function(){
+      var wc=w.WidgetChat;
+      var run=wc&&(wc.init||wc.initWidget);
+      if(typeof run==='function') run({siteKey:'${site.publicKey}',apiUrl:'${apiUrl}'});
+    };
     d.head.appendChild(e);
-  })(window,document,'script','${site.publicKey}','${widgetUrl}');
+  })(window,document,'script','${widgetUrl}');
 </script>`,
   });
 });

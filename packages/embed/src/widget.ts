@@ -695,11 +695,18 @@ export async function initWidget(opts: WidgetConfig) {
 }
 
 const w = window as Window & {
-  WidgetChat?: { init: (o: WidgetConfig) => void; q?: unknown[][] };
+  WidgetChat?: {
+    init?: (o: WidgetConfig) => void | Promise<void>;
+    initWidget?: (o: WidgetConfig) => void | Promise<void>;
+    q?: unknown[][];
+  };
 };
+
 if (w.WidgetChat?.q) {
   for (const item of w.WidgetChat.q) {
-    if (item[0] === "init") initWidget(item[1] as WidgetConfig);
+    if (item[0] === "init") void initWidget(item[1] as WidgetConfig);
   }
 }
-w.WidgetChat = { init: initWidget };
+
+/** Имя `init` — для IIFE global `WidgetChat.init` (см. vite lib.name) */
+export { initWidget as init };
