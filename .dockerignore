@@ -1,0 +1,13 @@
+node_modules
+**/node_modules
+.env
+.env.*
+*.db
+*.db-journal
+.git
+.cursor
+dist
+**/dist
+.DS_Store
+*.md
+!README.md

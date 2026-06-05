@@ -1,0 +1,125 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  OPERATOR
+}
+
+enum DialogStatus {
+  NEW
+  IN_PROGRESS
+  WAITING_VISITOR
+  CLOSED
+  OFFLINE
+}
+
+enum MessageSender {
+  VISITOR
+  OPERATOR
+}
+
+enum MessageStatus {
+  SENDING
+  DELIVERED
+  READ
+}
+
+model Company {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+  users     User[]
+  sites     Site[]
+}
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String
+  name         String
+  role         UserRole  @default(OPERATOR)
+  active       Boolean   @default(true)
+  companyId    String
+  company      Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  dialogs      Dialog[]  @relation("AssignedOperator")
+  createdAt    DateTime  @default(now())
+  lastSeenAt   DateTime?
+}
+
+model Site {
+  id                String   @id @default(cuid())
+  publicKey         String   @unique @default(cuid())
+  companyId         String
+  company           Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  name              String
+  domain            String
+  active            Boolean  @default(true)
+  widgetColor       String   @default("#2563eb")
+  widgetTitle       String   @default("Чат")
+  widgetGreeting    String   @default("Здравствуйте! Чем можем помочь?")
+  widgetPosition    String   @default("right")
+  offlineMessage    String   @default("Сейчас операторы недоступны. Оставьте сообщение — мы ответим позже.")
+  metrikaCounterId  String?
+  workHoursStart    Int?     // minutes from midnight, e.g. 540 = 09:00
+  workHoursEnd      Int?     // e.g. 1080 = 18:00
+  workDays          String?  // JSON array [1,2,3,4,5] Mon=1..Sun=7
+  createdAt         DateTime @default(now())
+  dialogs           Dialog[]
+}
+
+model Visitor {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  name         String?
+  email        String?
+  phone        String?
+  createdAt    DateTime @default(now())
+  dialogs      Dialog[]
+}
+
+model Dialog {
+  id              String       @id @default(cuid())
+  companyId       String
+  siteId          String
+  site            Site         @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  visitorId       String
+  visitor         Visitor      @relation(fields: [visitorId], references: [id], onDelete: Cascade)
+  operatorId      String?
+  operator        User?        @relation("AssignedOperator", fields: [operatorId], references: [id])
+  status          DialogStatus @default(NEW)
+  pageUrl         String?
+  utmSource       String?
+  utmMedium       String?
+  utmCampaign     String?
+  utmContent      String?
+  utmTerm         String?
+  isOffline       Boolean      @default(false)
+  firstMessageAt  DateTime     @default(now())
+  firstResponseAt DateTime?
+  closedAt        DateTime?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  messages        Message[]
+
+  @@index([companyId, status])
+  @@index([siteId])
+}
+
+model Message {
+  id        String         @id @default(cuid())
+  dialogId  String
+  dialog    Dialog         @relation(fields: [dialogId], references: [id], onDelete: Cascade)
+  sender    MessageSender
+  body      String
+  status    MessageStatus  @default(DELIVERED)
+  createdAt DateTime       @default(now())
+
+  @@index([dialogId])
+}

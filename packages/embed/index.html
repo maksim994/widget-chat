@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Widget demo page</title>
+    <style>
+      body { font-family: system-ui, sans-serif; padding: 2rem; max-width: 640px; }
+    </style>
+  </head>
+  <body>
+    <h1>Демо-страница сайта клиента</h1>
+    <p>Ниже подключается виджет. Укажите siteKey из seed в консоли API.</p>
+    <script type="module" src="/src/widget.ts"></script>
+    <script type="module">
+      import { initWidget } from '/src/widget.ts';
+      const params = new URLSearchParams(location.search);
+      initWidget({
+        siteKey: params.get('key') || 'REPLACE_SITE_KEY',
+        apiUrl: 'http://localhost:3001',
+      });
+    </script>
+  </body>
+</html>
