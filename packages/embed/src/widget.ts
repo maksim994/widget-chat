@@ -44,6 +44,7 @@ type WidgetState = {
   contactDone: boolean;
   socket: Socket | null;
   typing: boolean;
+  offlineSubmitted: boolean;
 };
 
 const state: WidgetState = {
@@ -55,6 +56,7 @@ const state: WidgetState = {
   contactDone: false,
   socket: null,
   typing: false,
+  offlineSubmitted: false,
 };
 
 let rootEl: HTMLElement | null = null;
@@ -335,6 +337,11 @@ function styles(color: string, position: string): string {
       text-align: left;
     }
     #wc-offline .wc-field, #wc-contact .wc-field { text-align: left; }
+    .wc-offline-success { justify-content: center; text-align: left; }
+    .wc-offline-success .wc-success-title {
+      margin: 0 0 8px; font-size: 18px; font-weight: 600; color: #101828;
+    }
+    .wc-offline-success p { margin: 0 0 20px; color: #475467; line-height: 1.5; }
     .wc-status-dot {
       display: inline-block; width: 8px; height: 8px;
       border-radius: 50%; margin-right: 6px;
@@ -399,7 +406,18 @@ function renderContactForm(): string {
   `;
 }
 
+function renderOfflineSuccess(): string {
+  return `
+    <div id="wc-offline" class="wc-offline-success">
+      <p class="wc-success-title">Спасибо!</p>
+      <p>Ваше сообщение отправлено. Мы свяжемся с вами в ближайшее время.</p>
+      <button type="button" class="wc-btn" id="wc-offline-close">Закрыть</button>
+    </div>
+  `;
+}
+
 function renderOffline(): string {
+  if (state.offlineSubmitted) return renderOfflineSuccess();
   const msg = state.config?.offlineMessage ?? "Операторы сейчас недоступны. Оставьте сообщение — мы ответим позже.";
   return `
     <div id="wc-offline">
@@ -619,6 +637,11 @@ function bindContact() {
 }
 
 function bindOffline() {
+  rootEl?.querySelector("#wc-offline-close")?.addEventListener("click", () => {
+    state.open = false;
+    render();
+  });
+
   const btn = rootEl?.querySelector("#wc-off-submit");
   btn?.addEventListener("click", async () => {
     const name = (rootEl?.querySelector("#wc-off-name") as HTMLInputElement)?.value.trim();
@@ -649,7 +672,7 @@ function bindOffline() {
       state.sessionToken = res.sessionToken;
       localStorage.setItem(STORAGE_KEY, res.sessionToken);
       reachGoal(res.metrikaCounterId, res.metrikaEvent);
-      state.open = false;
+      state.offlineSubmitted = true;
       render();
     } catch {
       alert("Ошибка отправки");

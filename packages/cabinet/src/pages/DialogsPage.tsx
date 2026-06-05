@@ -220,8 +220,14 @@ export default function DialogsPage() {
                       <span className="font-medium text-gray-800 dark:text-white/90 truncate">
                         {d.visitor.name ?? "Без имени"}
                       </span>
-                      <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${badgeClass[d.status] ?? badgeClass.NEW}`}>
-                        {STATUS_LABELS[d.status]}
+                      <span
+                        className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${
+                          d.isOffline
+                            ? badgeClass.OFFLINE
+                            : badgeClass[d.status] ?? badgeClass.NEW
+                        }`}
+                      >
+                        {d.isOffline ? "Заявка" : STATUS_LABELS[d.status]}
                       </span>
                     </div>
                     <p className="text-xs text-gray-500">{d.site.name}</p>
@@ -243,9 +249,16 @@ export default function DialogsPage() {
               <div className="border-b border-gray-200 px-5 py-4 dark:border-gray-800">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">
-                      {detail.visitor.name ?? "Посетитель"}
-                    </h3>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">
+                        {detail.visitor.name ?? "Посетитель"}
+                      </h3>
+                      {detail.isOffline && (
+                        <span className="rounded-full bg-warning-50 px-2 py-0.5 text-xs font-medium text-warning-700">
+                          Заявка с сайта
+                        </span>
+                      )}
+                    </div>
                     {detail.visitor.email && <p className="text-sm text-gray-500">{detail.visitor.email}</p>}
                     {detail.visitor.phone && <p className="text-sm text-gray-500">{detail.visitor.phone}</p>}
                     <p className="mt-2 text-xs text-gray-400">

@@ -412,7 +412,7 @@ widgetRouter.post("/offline/:publicKey", async (req, res) => {
       companyId: site.companyId,
       siteId: site.id,
       visitorId: visitor.id,
-      status: "OFFLINE",
+      status: "NEW",
       isOffline: true,
       pageUrl: ctx.pageUrl,
       utmSource: ctx.utmSource,
