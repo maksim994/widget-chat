@@ -44,9 +44,9 @@ export default function SitesPage() {
         body: JSON.stringify({
           ...form,
           metrikaCounterId: form.metrikaCounterId || null,
-          workDays: [1, 2, 3, 4, 5],
-          workHoursStart: 540,
-          workHoursEnd: 1080,
+          workDays: [1, 2, 3, 4, 5, 6, 7],
+          workHoursStart: null,
+          workHoursEnd: null,
         }),
       });
       setForm({ name: "", domain: "", metrikaCounterId: "" });
@@ -249,30 +249,48 @@ export default function SitesPage() {
                 </div>
               </div>
 
-              <div className="grid gap-4 sm:grid-cols-2">
-                <Field label="Начало рабочего дня">
-                  <input
-                    type="time"
-                    className={selectClass}
-                    value={minutesToTime(editing.workHoursStart)}
-                    onChange={(e) =>
-                      setEditing({ ...editing, workHoursStart: timeToMinutes(e.target.value) })
+              <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                <input
+                  type="checkbox"
+                  className="size-4 rounded border-gray-300"
+                  checked={editing.workHoursStart == null && editing.workHoursEnd == null}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setEditing({ ...editing, workHoursStart: null, workHoursEnd: null });
+                    } else {
+                      setEditing({ ...editing, workHoursStart: 540, workHoursEnd: 1080 });
                     }
-                  />
-                </Field>
-                <Field label="Конец рабочего дня">
-                  <input
-                    type="time"
-                    className={selectClass}
-                    value={minutesToTime(editing.workHoursEnd)}
-                    onChange={(e) =>
-                      setEditing({ ...editing, workHoursEnd: timeToMinutes(e.target.value) })
-                    }
-                  />
-                </Field>
-              </div>
+                  }}
+                />
+                Круглосуточно (чат доступен, когда оператор онлайн)
+              </label>
+              {editing.workHoursStart != null && editing.workHoursEnd != null && (
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <Field label="Начало рабочего дня">
+                    <input
+                      type="time"
+                      className={selectClass}
+                      value={minutesToTime(editing.workHoursStart)}
+                      onChange={(e) =>
+                        setEditing({ ...editing, workHoursStart: timeToMinutes(e.target.value) })
+                      }
+                    />
+                  </Field>
+                  <Field label="Конец рабочего дня">
+                    <input
+                      type="time"
+                      className={selectClass}
+                      value={minutesToTime(editing.workHoursEnd)}
+                      onChange={(e) =>
+                        setEditing({ ...editing, workHoursEnd: timeToMinutes(e.target.value) })
+                      }
+                    />
+                  </Field>
+                </div>
+              )}
               <p className="text-xs text-gray-500 -mt-2">
-                Вне рабочего времени или без операторов онлайн показывается офлайн-форма.
+                Офлайн-форма показывается, если нет операторов в кабинете или вне рабочих часов (если
+                не включено «Круглосуточно»). Оператор должен быть залогинен в кабинете.
               </p>
 
               <Field label="ID счётчика Яндекс Метрики">

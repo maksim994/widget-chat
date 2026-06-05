@@ -32,6 +32,7 @@ async function countOnlineOperators(companyId: string) {
     where: {
       companyId,
       active: true,
+      role: { in: ["ADMIN", "OPERATOR"] },
       lastSeenAt: { gte: since },
     },
   });

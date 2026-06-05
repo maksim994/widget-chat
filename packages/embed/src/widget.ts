@@ -102,6 +102,12 @@ async function api<T>(path: string, options?: RequestInit): Promise<T> {
 
 let visitorTypingTimer: ReturnType<typeof setTimeout> | null = null;
 let markReadTimer: ReturnType<typeof setTimeout> | null = null;
+let configPollId: ReturnType<typeof setInterval> | null = null;
+
+async function refreshConfig(): Promise<void> {
+  if (!siteKey) return;
+  state.config = await api<SiteConfig>(`/config/${siteKey}`);
+}
 
 function emitVisitorTyping(typing: boolean) {
   if (!state.dialog?.id || !state.socket) return;
@@ -196,6 +202,7 @@ function styles(color: string, position: string): string {
       line-height: 1.45;
       z-index: 2147483646;
       -webkit-font-smoothing: antialiased;
+      text-align: left;
     }
     #wc-launcher {
       position: fixed; bottom: 20px; ${side};
@@ -279,6 +286,7 @@ function styles(color: string, position: string): string {
     .wc-label {
       display: block; margin-bottom: 4px;
       font-size: 12px; font-weight: 500; color: #475467;
+      text-align: left;
     }
     .wc-input, .wc-textarea {
       display: block; width: 100%;
@@ -287,6 +295,7 @@ function styles(color: string, position: string): string {
       font-size: 14px; font-family: inherit;
       color: #101828; background: #fff;
       outline: none;
+      text-align: left;
       transition: border-color .15s, box-shadow .15s;
       -webkit-appearance: none; appearance: none;
     }
@@ -323,7 +332,9 @@ function styles(color: string, position: string): string {
     }
     #wc-offline > p {
       margin: 0 0 16px; font-size: 14px; color: #475467; line-height: 1.5;
+      text-align: left;
     }
+    #wc-offline .wc-field, #wc-contact .wc-field { text-align: left; }
     .wc-status-dot {
       display: inline-block; width: 8px; height: 8px;
       border-radius: 50%; margin-right: 6px;
@@ -429,9 +440,16 @@ function render() {
       <button type="button" id="wc-launcher" aria-label="Открыть чат">${CHAT_ICON}</button>
     `;
     rootEl.querySelector("#wc-launcher")?.addEventListener("click", () => {
-      state.open = true;
-      reachGoal(c.metrikaCounterId, "chat_widget_opened");
-      render();
+      void (async () => {
+        try {
+          await refreshConfig();
+        } catch {
+          /* оставляем предыдущий конфиг */
+        }
+        state.open = true;
+        reachGoal(state.config?.metrikaCounterId ?? c.metrikaCounterId, "chat_widget_opened");
+        render();
+      })();
     });
     return;
   }
@@ -681,6 +699,13 @@ export async function initWidget(opts: WidgetConfig) {
     if (session.dialog) {
       connectSocket(session.dialog.id);
     }
+
+    if (configPollId) clearInterval(configPollId);
+    configPollId = setInterval(() => {
+      void refreshConfig().then(() => {
+        if (state.open) render();
+      });
+    }, 45_000);
 
     render();
   } catch (e) {
