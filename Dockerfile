@@ -9,7 +9,8 @@ COPY packages/api/package.json ./packages/api/
 COPY packages/cabinet/package.json ./packages/cabinet/
 COPY packages/embed/package.json ./packages/embed/
 
-RUN npm ci
+# postinstall собирает shared — исходники ещё не скопированы
+RUN npm ci --ignore-scripts
 
 COPY packages ./packages
 COPY turbo.json ./
