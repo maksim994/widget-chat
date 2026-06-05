@@ -15,8 +15,10 @@ RUN npm ci --ignore-scripts
 COPY packages ./packages
 COPY turbo.json ./
 
-RUN npm run build:prod
+# Prisma Client нужен до компиляции API (tsc)
 RUN cd packages/api && npx prisma generate
+
+RUN npm run build:prod
 
 # Продакшен
 FROM node:22-alpine AS runner
