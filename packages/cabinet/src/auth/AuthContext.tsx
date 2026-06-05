@@ -68,10 +68,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [user]);
 
   const applyAuth = useCallback(
-    (res: AuthResponse) => {
+    (res: AuthResponse, options?: { afterRegister?: boolean }) => {
       setToken(res.token);
       setUser(res.user);
-      navigate("/", { replace: true });
+      const path =
+        options?.afterRegister && res.user.role === "ADMIN" ? "/operators?welcome=1" : "/";
+      navigate(path, { replace: true });
     },
     [navigate]
   );
@@ -100,7 +102,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         body: JSON.stringify(data),
         skipAuthRedirect: true,
       });
-      applyAuth(res);
+      applyAuth(res, { afterRegister: true });
     },
     [applyAuth]
   );

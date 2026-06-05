@@ -1,6 +1,7 @@
 import { Router } from "express";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
+import { apiError } from "@widget/shared";
 import { prisma } from "../lib/prisma.js";
 import { authMiddleware, requireAdmin } from "../lib/auth.js";
 
@@ -9,7 +10,7 @@ operatorsRouter.use(authMiddleware, requireAdmin);
 
 operatorsRouter.get("/", async (req, res) => {
   const users = await prisma.user.findMany({
-    where: { companyId: req.user!.companyId },
+    where: { companyId: req.user!.companyId, active: true },
     select: {
       id: true,
       email: true,
@@ -41,7 +42,7 @@ operatorsRouter.post("/", async (req, res) => {
     where: { email: parsed.data.email },
   });
   if (exists) {
-    res.status(409).json({ error: "Email taken" });
+    res.status(409).json(apiError("Этот email уже занят", "EMAIL_TAKEN"));
     return;
   }
   const passwordHash = await bcrypt.hash(parsed.data.password, 10);
@@ -98,4 +99,41 @@ operatorsRouter.patch("/:id", async (req, res) => {
     },
   });
   res.json(updated);
+});
+
+operatorsRouter.delete("/:id", async (req, res) => {
+  const targetId = String(req.params.id);
+  const companyId = req.user!.companyId;
+
+  if (targetId === req.user!.userId) {
+    res.status(400).json(apiError("Нельзя удалить свой аккаунт", "SELF_DELETE"));
+    return;
+  }
+
+  const target = await prisma.user.findFirst({
+    where: { id: targetId, companyId, active: true },
+  });
+  if (!target) {
+    res.status(404).json(apiError("Оператор не найден", "NOT_FOUND"));
+    return;
+  }
+
+  if (target.role === "ADMIN") {
+    const otherAdmins = await prisma.user.count({
+      where: { companyId, role: "ADMIN", active: true, id: { not: targetId } },
+    });
+    if (otherAdmins === 0) {
+      res.status(400).json(apiError("Нельзя удалить последнего администратора", "LAST_ADMIN"));
+      return;
+    }
+  }
+
+  await prisma.dialog.updateMany({
+    where: { operatorId: targetId },
+    data: { operatorId: null },
+  });
+
+  await prisma.user.delete({ where: { id: targetId } });
+
+  res.status(204).end();
 });

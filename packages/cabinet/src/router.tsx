@@ -10,6 +10,7 @@ import SitesPage from "./pages/SitesPage";
 import OperatorsPage from "./pages/OperatorsPage";
 import AnalyticsPage from "./pages/AnalyticsPage";
 import HelpPage from "./pages/HelpPage";
+import AdminRoute from "./components/AdminRoute";
 
 function AuthRoot() {
   return (
@@ -37,10 +38,15 @@ export const router = createBrowserRouter([
             element: <AppLayout />,
             children: [
               { index: true, element: <DialogsPage /> },
-              { path: "sites", element: <SitesPage /> },
-              { path: "operators", element: <OperatorsPage /> },
-              { path: "analytics", element: <AnalyticsPage /> },
-              { path: "help", element: <HelpPage /> },
+              {
+                element: <AdminRoute />,
+                children: [
+                  { path: "sites", element: <SitesPage /> },
+                  { path: "operators", element: <OperatorsPage /> },
+                  { path: "analytics", element: <AnalyticsPage /> },
+                  { path: "help", element: <HelpPage /> },
+                ],
+              },
             ],
           },
         ],

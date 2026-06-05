@@ -34,7 +34,10 @@ export default function RegisterPage() {
           <h1 className="mb-2 text-title-sm font-semibold text-gray-800 dark:text-white/90 sm:text-title-md">
             Регистрация
           </h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400">Создайте компанию и аккаунт администратора</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            Создайте компанию. Вы станете администратором и сможете добавить операторов для чата с
+            покупателями на сайте.
+          </p>
         </div>
         <form onSubmit={submit} className="space-y-4">
           {(
